@@ -44,6 +44,54 @@ Lista de extensiones para el [VSCode](https://code.visualstudio.com/)
 
 - [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) - Soporte completo para notebooks de Jupyter, permitiendo crear, editar y ejecutar celdas de cรณdigo interactivo directamente en VSCode.
 
+### Cline
+
+- [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) - Asistente de IA avanzado para VSCode que permite la automatización de tareas de desarrollo mediante inteligencia artificial.
+
+[Cline](https://cline.bot/) es una extensión de VSCode que integra modelos de lenguaje grandes (LLMs) directamente en tu entorno de desarrollo, permitiendo automatizar tareas complejas de programación y desarrollo.
+
+**Características principales:**
+- **Automatización de código**: Genera, modifica y refactoriza código automáticamente
+- **Ejecución de comandos**: Puede ejecutar comandos de terminal y scripts
+- **Navegación de archivos**: Lee, crea y modifica archivos en tu proyecto
+- **Integración con navegador**: Puede interactuar con páginas web para testing
+- **Soporte multi-modelo**: Compatible con Claude, GPT-4, modelos locales (Ollama, LM Studio)
+- **Modo Plan y Acción**: Planifica tareas complejas antes de ejecutarlas
+- **Control granular**: Aprobación manual de acciones críticas
+
+**Modelos soportados:**
+- **Claude 3.5 Sonnet**: Modelo recomendado para tareas de desarrollo
+- **GPT-4**: Soporte completo para modelos de OpenAI
+- **Modelos locales**: Integración con Ollama y LM Studio
+- **Otros proveedores**: Anthropic, OpenAI, Google, AWS Bedrock
+
+**Casos de uso:**
+- Desarrollo completo de aplicaciones web
+- Refactorización y optimización de código existente
+- Debugging y resolución de errores
+- Creación de documentación automática
+- Testing y validación de funcionalidades
+- Migración entre tecnologías
+
+**Configuración básica:**
+1. Instalar la extensión desde el marketplace de VSCode
+2. Configurar tu API key del modelo preferido
+3. Ajustar permisos y configuraciones de seguridad
+4. Comenzar a interactuar mediante el panel de chat
+
+**Comandos útiles:**
+- `Ctrl+Shift+P` → "Cline: Open" para abrir el panel
+- Usar `/` para comandos especiales en el chat
+- Modo "Auto-approve" para tareas repetitivas
+- Checkpoints para guardar estados del proyecto
+
+**Ventajas:**
+- **Productividad**: Acelera significativamente el desarrollo
+- **Aprendizaje**: Explica el código y las decisiones tomadas
+- **Consistencia**: Mantiene estándares de código uniformes
+- **Versatilidad**: Maneja múltiples lenguajes y frameworks
+- **Seguridad**: Control total sobre las acciones ejecutadas
+
 ## Ollama
 
 [Ollama](https://ollama.com/) es una herramienta que permite ejecutar modelos de lenguaje grandes (LLMs) localmente en tu computadora de manera sencilla y eficiente.
