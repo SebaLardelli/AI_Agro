@@ -1,7 +1,122 @@
-# utn-agro-ai
-Repositorio de contenido de modulos en el programa "Desarrollo Avanzado de Soluciones de IA"
+# UTN Agro AI - Curso de LLMs
 
-## Github Cuenta
+Repositorio de contenido de módulos en el programa "Desarrollo Avanzado de Soluciones de IA"
+
+## 📋 Contenido del Curso
+
+### Módulo 1: Introducción a LLMs
+- **00 - Índice**: Introducción general al curso
+- **01 - Clase 01**: Actualización de información y búsqueda web
+- **02 - Clase 01**: Solución de ejercicios de búsqueda web
+- **03 - Clase 02**: ChatGPT API - Ejemplo mínimo y conceptos básicos
+- **04 - Clase 03**: OpenAI API - Scraping y extracción de datos
+- **05 - Clase 04**: Claude API - Ejemplos y visión por computadora
+- **06 - Clase 05**: Gemini API - Ejemplos y tareas de PLN
+- **07 - Clase 06**: APIs de datos climáticos y visualización
+- **08 - Clase 07**: A/B Testing con OpenAI - Experimentos y evaluación
+- **09 - Clase 08**: A/B Testing con Gemini - Experimentos
+- **10 - Clase 09**: Ollama - Modelos locales
+- **11 - Clase 09**: LM Studio - Interfaz para modelos locales
+
+## 🔧 Configuración del Entorno
+
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/kobogithub/utn-agro-ai.git
+cd utn-agro-ai
+```
+
+### 2. Configurar Variables de Entorno
+
+#### Para uso local:
+1. Copia el archivo de ejemplo:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edita el archivo `.env` y completa tus API keys:
+   ```env
+   # OpenAI API Key
+   OPENAI_API_KEY=tu_openai_api_key_aqui
+   
+   # Anthropic API Key (Claude)
+   ANTHROPIC_API_KEY=tu_anthropic_api_key_aqui
+   
+   # Google API Key (Gemini)
+   GOOGLE_API_KEY=tu_google_api_key_aqui
+   ```
+
+#### Para uso en Google Colab:
+Los notebooks detectan automáticamente si se ejecutan en Colab y utilizarán los secretos de Colab. Configura tus API keys en:
+- Colab → Secretos → Agregar nuevo secreto
+- Nombres de secretos: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`
+
+### 3. Obtener API Keys
+
+#### OpenAI API Key
+1. Visita [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
+2. Crea una nueva API key
+3. Copia la clave y pégala en tu archivo `.env`
+
+#### Anthropic API Key (Claude)
+1. Visita [https://console.anthropic.com/](https://console.anthropic.com/)
+2. Crea una cuenta y genera una API key
+3. Copia la clave y pégala en tu archivo `.env`
+
+#### Google API Key (Gemini)
+1. Visita [https://makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
+2. Crea una nueva API key
+3. Copia la clave y pégala en tu archivo `.env`
+
+## 🚀 Uso de los Notebooks
+
+### Instalación de Dependencias
+Cada notebook instala automáticamente las dependencias necesarias. Las principales librerías utilizadas son:
+- `openai` - Para interactuar con la API de OpenAI
+- `anthropic` - Para interactuar con la API de Claude
+- `google-genai` - Para interactuar con la API de Gemini
+- `python-dotenv` - Para cargar variables de entorno
+- `requests` - Para realizar peticiones HTTP
+- `beautifulsoup4` - Para web scraping
+
+### Estructura de los Notebooks
+Todos los notebooks han sido refactorizados para seguir las mejores prácticas:
+
+1. **Detección automática de entorno**: Los notebooks detectan si se ejecutan en Colab o localmente
+2. **Carga segura de API keys**: Utiliza `python-dotenv` para entornos locales y secretos de Colab
+3. **Manejo de errores**: Mensajes claros si faltan las API keys
+4. **Compatibilidad**: Funciona tanto en Jupyter local como en Google Colab
+
+### Ejemplo de Uso
+```python
+# El código de configuración está incluido en cada notebook
+# Solo necesitas ejecutar las celdas en orden
+
+# 1. Instalar dependencias y cargar API keys
+!pip install openai python-dotenv --quiet
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+# 2. Configuración automática
+load_dotenv()
+# ... código de detección de entorno ...
+
+# 3. Usar la API
+client = OpenAI(api_key=OPENAI_API_KEY)
+response = client.chat.completions.create(...)
+```
+
+## 🔒 Seguridad
+
+- **Nunca** commits tus API keys al repositorio
+- El archivo `.env` está incluido en `.gitignore` para prevenir commits accidentales
+- Usa el archivo `.env.example` como plantilla
+- En Colab, utiliza la función de secretos integrada
+
+## 🛠️ Herramientas de Desarrollo
+
+### GitHub Cuenta
 
 [GitHub](https://github.com/) es la plataforma de desarrollo colaborativo más popular del mundo, basada en Git. Permite a los desarrolladores:
 
@@ -18,152 +133,57 @@ Repositorio de contenido de modulos en el programa "Desarrollo Avanzado de Soluc
 - Comunidad activa de desarrolladores
 - Documentación y wikis integradas
 
-## Instalacion de Git
+### Instalación de Git
 
 Control de Versiones [Git](https://git-scm.com/)
 
-## Instalacion de Python
+### Instalación de Python
 
-Lenguaje de programacion [Python](https://www.python.org/)
+Lenguaje de programación [Python](https://www.python.org/)
 
-Entorno Virtual de [Python Virtualvenv](https://realpython.com/python-virtual-environments-a-primer/)
+Entorno Virtual de [Python Virtualenv](https://realpython.com/python-virtual-environments-a-primer/)
 
-## Extensiones VSCode
+### Extensiones VSCode
 
-Lista de extensiones para el [VSCode](https://code.visualstudio.com/)
+Para una mejor experiencia de desarrollo, se recomienda instalar las siguientes extensiones en Visual Studio Code:
 
-### Python
+- **Python**: Soporte completo para Python
+- **Jupyter**: Para trabajar con notebooks
+- **Python Docstring Generator**: Generación automática de docstrings
+- **GitLens**: Mejoras para Git
+- **Pylance**: Language server para Python
 
-- [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) - Depurador oficial de Python que permite establecer puntos de interrupciรณn, inspeccionar variables y ejecutar cรณdigo paso a paso.
-- [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) - Extensiรณn principal de Python que proporciona soporte completo para el lenguaje, incluyendo IntelliSense, linting, formateo y ejecuciรณn de cรณdigo.
-- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) - Servidor de lenguaje Python de alto rendimiento que ofrece autocompletado inteligente, verificaciรณn de tipos y anรกlisis de cรณdigo avanzado.
-- [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs) - Herramienta para gestionar y cambiar fรกcilmente entre diferentes entornos virtuales de Python (venv, conda, etc.).
-- [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) - Formateador automรกtico que organiza y ordena las importaciones de Python segรบn las mejores prรกcticas.
+## 🤝 Contribuciones
 
-### Jupyter
+Este es un proyecto educativo. Si encuentras errores o tienes sugerencias:
+1. Abre un issue describiendo el problema
+2. Propón mejoras mediante pull requests
+3. Asegúrate de no incluir API keys en tus contribuciones
 
-- [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) - Soporte completo para notebooks de Jupyter, permitiendo crear, editar y ejecutar celdas de cรณdigo interactivo directamente en VSCode.
+## 📚 Recursos Adicionales
 
-### Cline
+### Documentación de APIs
+- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Anthropic Claude API Documentation](https://docs.anthropic.com/)
+- [Google Gemini API Documentation](https://ai.google.dev/docs)
 
-- [Cline](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) - Asistente de IA avanzado para VSCode que permite la automatización de tareas de desarrollo mediante inteligencia artificial.
+### Tutoriales Relacionados
+- [DeepLearning.AI ChatGPT Prompt Engineering](https://learn.deeplearning.ai/chatgpt-prompt-eng/)
+- [Anthropic Claude Documentation](https://docs.anthropic.com/)
 
-[Cline](https://cline.bot/) es una extensión de VSCode que integra modelos de lenguaje grandes (LLMs) directamente en tu entorno de desarrollo, permitiendo automatizar tareas complejas de programación y desarrollo.
+## 📄 Licencia
 
-**Características principales:**
-- **Automatización de código**: Genera, modifica y refactoriza código automáticamente
-- **Ejecución de comandos**: Puede ejecutar comandos de terminal y scripts
-- **Navegación de archivos**: Lee, crea y modifica archivos en tu proyecto
-- **Integración con navegador**: Puede interactuar con páginas web para testing
-- **Soporte multi-modelo**: Compatible con Claude, GPT-4, modelos locales (Ollama, LM Studio)
-- **Modo Plan y Acción**: Planifica tareas complejas antes de ejecutarlas
-- **Control granular**: Aprobación manual de acciones críticas
+Este proyecto es de uso educativo para la UTN. Consulta con los instructores sobre el uso y distribución del material.
 
-**Modelos soportados:**
-- **Claude 3.5 Sonnet**: Modelo recomendado para tareas de desarrollo
-- **GPT-4**: Soporte completo para modelos de OpenAI
-- **Modelos locales**: Integración con Ollama y LM Studio
-- **Otros proveedores**: Anthropic, OpenAI, Google, AWS Bedrock
+## 🆘 Soporte
 
-**Casos de uso:**
-- Desarrollo completo de aplicaciones web
-- Refactorización y optimización de código existente
-- Debugging y resolución de errores
-- Creación de documentación automática
-- Testing y validación de funcionalidades
-- Migración entre tecnologías
+Si tienes problemas con la configuración:
+1. Verifica que tus API keys sean válidas
+2. Asegúrate de que el archivo `.env` esté en la raíz del proyecto
+3. Revisa que las dependencias estén instaladas correctamente
+4. Consulta los logs de error para más detalles
 
-**Configuración básica:**
-1. Instalar la extensión desde el marketplace de VSCode
-2. Configurar tu API key del modelo preferido
-3. Ajustar permisos y configuraciones de seguridad
-4. Comenzar a interactuar mediante el panel de chat
+---
 
-**Comandos útiles:**
-- `Ctrl+Shift+P` → "Cline: Open" para abrir el panel
-- Usar `/` para comandos especiales en el chat
-- Modo "Auto-approve" para tareas repetitivas
-- Checkpoints para guardar estados del proyecto
-
-**Ventajas:**
-- **Productividad**: Acelera significativamente el desarrollo
-- **Aprendizaje**: Explica el código y las decisiones tomadas
-- **Consistencia**: Mantiene estándares de código uniformes
-- **Versatilidad**: Maneja múltiples lenguajes y frameworks
-- **Seguridad**: Control total sobre las acciones ejecutadas
-
-## Ollama
-
-[Ollama](https://ollama.com/) es una herramienta que permite ejecutar modelos de lenguaje grandes (LLMs) localmente en tu computadora de manera sencilla y eficiente.
-
-**Características principales:**
-- **Ejecución local**: Ejecuta modelos de IA sin necesidad de conexión a internet
-- **Privacidad**: Tus datos permanecen en tu dispositivo
-- **Múltiples modelos**: Soporte para Llama 2, Llama 3, Gemma, Mistral, Code Llama y más
-- **API REST**: Interfaz programática para integrar con aplicaciones
-- **Optimización automática**: Gestión eficiente de memoria y recursos del sistema
-
-**Instalación:**
-```bash
-# Windows (PowerShell como administrador)
-winget install Ollama.Ollama
-
-# macOS
-brew install ollama
-
-# Linux
-curl -fsSL https://ollama.com/install.sh | sh
-```
-
-**Comandos básicos:**
-```bash
-# Descargar y ejecutar un modelo
-ollama run llama3
-
-# Listar modelos instalados
-ollama list
-
-# Eliminar un modelo
-ollama rm modelo_name
-
-# Mostrar información del modelo
-ollama show modelo_name
-```
-
-**Modelos populares:**
-- `llama3`: Modelo general de Meta AI
-- `gemma`: Modelo de Google DeepMind
-- `mistral`: Modelo eficiente de Mistral AI
-- `codellama`: Especializado en programación
-- `phi3`: Modelo compacto de Microsoft
-
-## LM Studio
-
-[LM Studio](https://lmstudio.ai/) es una aplicación de escritorio que permite descargar, instalar y ejecutar modelos de lenguaje grandes (LLMs) localmente con una interfaz gráfica intuitiva.
-
-**Características principales:**
-- **Interfaz gráfica amigable**: No requiere conocimientos técnicos avanzados
-- **Amplio catálogo de modelos**: Acceso a miles de modelos desde Hugging Face
-- **Chat interactivo**: Interfaz de chat similar a ChatGPT pero completamente local
-- **Servidor local**: Puede funcionar como servidor API compatible con OpenAI
-- **Optimización automática**: Detecta automáticamente la configuración óptima para tu hardware
-- **Soporte multiplataforma**: Disponible para Windows, macOS y Linux
-
-**Ventajas:**
-- **Privacidad total**: Todos los datos permanecen en tu dispositivo
-- **Sin límites de uso**: No hay restricciones de tokens o consultas
-- **Personalización**: Ajusta parámetros como temperatura, top-p, y más
-- **Importación de modelos**: Soporte para formatos GGUF, GGML y otros
-- **Historial de conversaciones**: Guarda y organiza tus chats
-
-**Casos de uso:**
-- Desarrollo de aplicaciones de IA
-- Investigación y experimentación con LLMs
-- Asistente personal de programación
-- Análisis de texto y generación de contenido
-- Prototipado de chatbots y asistentes virtuales
-
-**Requisitos del sistema:**
-- **RAM**: Mínimo 8GB (recomendado 16GB+)
-- **Almacenamiento**: 10GB+ de espacio libre
-- **GPU**: Opcional pero recomendada (NVIDIA, AMD, o Apple Silicon)
+**Desarrollado para UTN - Universidad Tecnológica Nacional**  
+**Curso: Introducción a Large Language Models aplicados a la Agroindustria**
