@@ -3,13 +3,14 @@ import os
 import pandas as pd
 import datetime
 import gradio as gr
+import requests
 
 from pathlib import Path
 from io import StringIO
 from ollama import chat  
 
 MODEL_NAME = "hf.co/unsloth/gemma-3n-E4B-it-GGUF:UD-Q4_K_XL"
-
+os.environ["OLLAMA_HOST"] = "http://127.0.0.1:11434"
 # PRIMERA CONSULTA
 
 # Definición de la consulta técnica
@@ -762,7 +763,7 @@ print("Democratizando el acceso a IA para equipos técnicos del sector...")
 # Lanzar interfaz (en producción usar share=False por seguridad)
 interfaz_agropecuaria.launch(
     server_name="127.0.0.1",  # Solo acceso local por seguridad
-    server_port=7860,
+    server_port=None,
     share=False,  # Sin compartir públicamente 
     quiet=False
 )
