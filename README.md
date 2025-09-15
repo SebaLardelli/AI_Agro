@@ -187,3 +187,7 @@ Si tienes problemas con la configuración:
 
 **Desarrollado para UTN - Universidad Tecnológica Nacional**  
 **Curso: Introducción a Large Language Models aplicados a la Agroindustria**
+
+# No funciono algunas cosas en 04 LLM M3
+
+# No pude obtener la clave de Anthropic por lo tanto no pude terminar algunos cuadernos
