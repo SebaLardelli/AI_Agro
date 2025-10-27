@@ -1,3 +1,6 @@
+## Ejecute NGROK desde la terminal con el comando = ngrok http 5678, copie el webhook manualmente
+
+
 # 🌾 Analizador Agrícola con IA - Soluciones para el Agro
 
 Sistema inteligente de análisis visual de imágenes agrícolas que utiliza Google Gemini Vision para detectar problemas de calidad, plagas y riesgos sanitarios en granos y semillas.
