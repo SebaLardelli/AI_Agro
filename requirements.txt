@@ -1,0 +1,22 @@
+# Dependencias para el sistema agrícola
+
+# Flask para el servidor web
+flask==3.0.0
+
+# Procesamiento de imágenes
+pillow==10.1.0
+
+# Variables de entorno
+python-dotenv==1.0.0
+
+# Gemini AI
+google-genai
+
+# Supabase cliente
+supabase
+
+# Operaciones numéricas
+numpy==1.24.3
+
+# Requests para HTTP
+requests==2.31.0

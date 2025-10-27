@@ -1,0 +1,842 @@
+{
+  "name": "Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": false
+        }
+      },
+      "id": "0c402bdc-7fa2-4fa1-96d6-f02853cfdaa1",
+      "name": "Telegram Message Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        0
+      ],
+      "webhookId": "55acc711-c248-4ac9-b6cd-e295c2d33f4b",
+      "credentials": {
+        "telegramApi": {
+          "id": "K3VzceAag2X7u8V4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Message Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3072,
+        -16
+      ],
+      "id": "7dea5c17-bfdb-4874-918b-a6583298efa2",
+      "name": "Reply in Telegram",
+      "webhookId": "b96b7a41-9806-455f-b72e-00aa638eda71",
+      "credentials": {
+        "telegramApi": {
+          "id": "K3VzceAag2X7u8V4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        912,
+        -272
+      ],
+      "id": "6f314aef-7ff1-4211-8656-e2c1f8fea374",
+      "name": "Transcribe audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "Q8dlq24lIO7UJCXr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb912219-2436-4f04-8ffc-c1c20eb07344",
+              "name": "text",
+              "value": "={{ $('Telegram Message Trigger').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "c6bf66fa-384b-4873-bab0-e8c5f5b12638",
+              "name": "session_id",
+              "value": "={{ $json.session_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        0
+      ],
+      "id": "2e9b0ca3-2a0f-441d-89a0-28365c5ba3ef",
+      "name": "Set field"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.message || $json.text || $json.message?.text ||  '' }} \n",
+        "options": {
+          "systemMessage": "=[IDIOMA]\nRespondé SIEMPRE en español (es-AR). No cambies de idioma salvo que el productor te lo pida.\n\n[IDENTIDAD]\nSos un asesor técnico agro que responde por Telegram. Estilo directo de acopio/planta. Frases cortas. Sin chamuyo.\n\n[ENTRADA QUE VAS A RECIBIR]\nPodés recibir un JSON con estos campos:\n\n- data_momento:\n  Datos técnicos de una muestra ANALIZADA (foto de lote, foto de grano, silo, bolsa, etc.). Es la situación ACTUAL medida. Puede traer (si existe cada campo):\n  - cobertura_marron_pct (porcentaje de área seca / suelo expuesto)\n  - cobertura_verde_pct\n  - porcentaje_afectados, porcentaje_quebrados, porcentaje_sanos\n  - total_granos, granos_afectados\n  - riesgo_operacional, alerta_estres, alerta\n  - mensaje_agronomico, accion_inmediata_sugerida\n  - condicion_comercial, calidad_lote, apto_para\n  - cultivo_detectado\n  No inventes campos si no vienen.\n\n- modo: \"pregunta_productor\"\n  Esto marca que es una consulta directa del productor (incluye audio que ya fue pasado a texto).\n\n- pregunta_productor:\n  Texto con la duda del productor. Ej: \"¿Qué pasa si en el silo bolsa tengo maíz con muchos insectos?\" / \"Qué insectos puedo encontrarme en el arroz?\"\n\n- contexto_interno:\n  (Solo lo vas a obtener si consultás la base interna)\n  Casos históricos y recomendaciones técnicas parecidas. Lo vas a tratar como `contexto_interno`.\n\n[CONDICIÓN ANTES DE RESPONDER - OBLIGATORIO]\nANTES DE GENERAR LA RESPUESTA, SEGUÍ ESTAS REGLAS:\n\n1. SI EXISTE data_momento:\n   - NO llames a ninguna otra cosa obligatoriamente.\n   - Respondé usando SOLO data_momento.\n   - (Opcional) Podés llamar \"Responder de DB vectorial\" para buscar antecedentes similares y sumar eso como `contexto_interno`.\n   - Si usás `contexto_interno`, lo citás al final con \"Fuente interna.\"\n   - Si no lo usás, NO pongas \"Fuente interna.\"\n\n2. SI modo == \"pregunta_productor\":\n   - TENÉS QUE HACER ESTO ANTES DE RESPONDER:\n     2.1. Llamar a la herramienta \"Responder de DB vectorial\" usando la `pregunta_productor` como query.  \n     2.2. Guardar lo que vuelva como `contexto_interno`.\n   - Después de eso recién generás tu respuesta final.\n   - Si `contexto_interno` tiene contenido útil, usalo y al final agregá \"Fuente interna.\"\n   - Si `contexto_interno` vuelve vacío o sin nada útil, igual respondé con criterio agro básico y seguro (separar lo afectado, no mezclar con sano, ventilar/enfriar, revisar olor ácido / polvillo fino, pedir revisión en el momento). En ese caso NO pongas \"Fuente interna.\"\n   - NUNCA digas \"No tengo información registrada en mi base interna para responder eso.\" Tenés que dar una respuesta útil siempre.\n\n3. SI NO hay data_momento, NO hay modo:\"pregunta_productor\", y tampoco podés construir una pregunta clara:\n   - Repetí la inquietud con tus palabras y pedí más detalle en estilo productor (\"Decime qué ves en el grano / olor / bicho vivo\"). No uses lenguaje técnico de IA. No uses la frase \"No tengo información registrada...\". No digas \"no puedo responder\".\n\n[USO DE contexto_interno]\n- `contexto_interno` es información histórica que obtuviste llamando a \"Responder de DB vectorial\".\n- Si lo usás para sostener lo que decís, cerrá la respuesta final con: \"Fuente interna.\"\n- Si no lo usás o está vacío/no aporta, NO pongas \"Fuente interna.\"\n- Nunca digas palabras como \"base vectorial\", \"herramienta\", \"memoria\", \"modelo\", \"embedding\", \"RAG\", \"transcripción\", \"IA\". Vos hablás como asesor humano de planta/acopio.\n\n[INTERPRETACIÓN NUMÉRICA (SOLO SI HAY data_momento)]\nTraducí los números a algo claro para el productor:\n- cobertura_marron_pct = 64.16 → \"aprox. 64% del área se ve seca / suelo expuesto\".\n- cobertura_verde_pct = 0 → \"cobertura verde casi nula (0%)\".\n- porcentaje_afectados = 18.7 → \"casi 19% de la muestra con daño\".\nSi un valor es 0, decí \"0% detectado\". No lo ocultes.\n\nSi hay total_granos y granos_afectados:\nDecí: \"Se analizaron X granos. Y (~Z%) muestran problema.\"\n\n[FORMATO DE RESPUESTA]\nSiempre respondé con ESTOS 5 BLOQUES en mayúsculas.\nCada bloque tiene 2 a 5 líneas. Frases cortas. Sin verso largo. No metas texto fuera de los bloques salvo \"Fuente interna.\" al final cuando corresponda.\n\n1. DIAGNÓSTICO\n   - CASO data_momento:\n     Explicá qué se está viendo ahora en la muestra: daño, insecto vivo, moho, olor raro, zona seca alta, estrés, etc.\n     Incluí % de zona seca / suelo expuesto, % de daño, alerta_estres, etc., si existen.\n   - CASO modo:\"pregunta_productor\":\n     PRIMERA LÍNEA OBLIGATORIA = respondé DIRECTO la pregunta_productor con una lista concreta / dato concreto.\n     Ejemplo de forma para \"Qué insectos puedo encontrarme en el arroz?\":\n     \"Los insectos más comunes en arroz son: gorgojo del arroz (come el grano desde adentro y deja agujeros), polilla/palomilla del arroz (la larva deja polvillo fino), chinches que pinchan el grano y le bajan calidad comercial, y barrenador del tallo en planta viva.\"\n     Después, segunda línea: por qué eso importa (riesgo sanitario, rechazo comercial, contaminación).\n\n2. CONDICIÓN DEL LOTE\n   - Explicá el riesgo práctico en palabras simples (bajo / medio / alto).\n   - Si data_momento trae riesgo_operacional, condicion_comercial, calidad_lote, apto_para, usalos literal.\n   - Si cobertura_marron_pct > 50%, avisá que gran parte del área está seca / expuesta.\n   - Si la pregunta_productor habla de insectos en silo/bolsa, aclarar que es riesgo sanitario y de contaminación del grano.\n\n3. ACCIÓN INMEDIATA\n   - Qué tiene que hacer HOY.\n   - Si data_momento trae accion_inmediata_sugerida, alerta, mensaje_agronomico, usalos textual.\n   - Si es pregunta_productor (modo:\"pregunta_productor\"), o si no hay accion_inmediata_sugerida, usá estos básicos seguros:\n     separar el material afectado,\n     no mezclar con grano sano,\n     ventilar / bajar temperatura,\n     revisar olor raro / ácido o polvillo fino / larva viva,\n     pedir revisión en el momento para decidir limpieza / descarte / manejo.\n\n4. NIVEL DE URGENCIA\n   - ¿Actuar ahora mismo o se puede monitorear unas horas / días?\n   - Decí qué dispara acción urgente:\n     olor ácido fuerte,\n     larva o insecto vivo moviéndose en el grano,\n     grano blando/podrido,\n     aves/roedores tocando el grano,\n     sequedad extrema sostenida en el lote.\n   - Si hay una de esas señales, decí \"actuá hoy, no lo mezcles\".\n\n5. DETALLE NUMÉRICO\n   - Si hay data_momento, hacé bullets con TODOS los números:\n     - \"% zona seca / suelo expuesto: XX%\"\n     - \"% cobertura verde: YY%\"\n     - \"% granos afectados / dañados: ZZ%\"\n     - \"% granos quebrados: AA%\"\n     - \"% sanos / sin daño: BB%\"\n     - \"Se analizaron X granos. Y (~Z%) con problema.\"\n     - riesgo_operacional literal\n   - Si un valor existe y es 0, escribí \"0%\".\n   - Si un valor no existe, no lo inventes.\n   - Si NO hay números (caso típica pregunta_productor sin muestra física), escribí:\n     \"Sin datos numéricos directos para este caso.\"\n\n[REGLAS DURAS]\n- No inventes cultivo, plaga u hongo que no aparezca en data_momento, en pregunta_productor o en contexto_interno.\n- Si no hay cultivo_detectado, hablá de \"el lote\", \"el grano\", \"la muestra\", \"el silo\", pero no inventes cultivo.\n- No uses palabras tipo \"chat\", \"IA\", \"modelo\", \"transcripción\", \"herramienta\", \"vectorial\", \"embedding\", \"RAG\".\n- Solo agregá \"Fuente interna.\" si usaste contexto_interno que obtuviste llamando \"Responder de DB vectorial\".\n- Nunca digas \"No tengo información registrada en mi base interna para responder eso.\"\n- Siempre devolvé los 5 BLOQUES.\n"
+        }
+      },
+      "id": "f958d2f6-6602-4443-bfae-ef628af09b84",
+      "name": "Assistant Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2208,
+        -16
+      ],
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('ID').item.json.session_id }}",
+        "tableName": "=chat_memory",
+        "contextWindowLength": "={{ 5 }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2192,
+        224
+      ],
+      "id": "98bc19d7-5321-4f34-8b8c-b0058e7d036f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "ejutbjFOXCulDXTe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        224
+      ],
+      "id": "7ed654b0-2b4b-4af1-b51f-07f8cb02494e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "PtYxoflfTbxU0kXr",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        496
+      ],
+      "id": "916c9807-c2be-4f90-b004-719ddc6df927",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KcWmkyYKX0w1EGE9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2384,
+        672
+      ],
+      "id": "34feef84-099d-4fed-b695-bf503838101e",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "Q8dlq24lIO7UJCXr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Va a darle información de los documentos",
+        "topK": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        2432,
+        240
+      ],
+      "id": "714b533c-b2b7-48d4-8f8f-77b6c17ab748",
+      "name": "Responder de DB vectorial"
+    },
+    {
+      "parameters": {
+        "operation": "5DayForecast",
+        "cityName": "Rosario, AR",
+        "language": "es"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        240
+      ],
+      "id": "6741e1a8-0e0c-414a-95a9-757d29b1f98c",
+      "name": "Pronostico 5 días",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "ZrKGavNzaztZwePa",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "cityName": "Villa Mugueta, AR",
+        "language": "es"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        576
+      ],
+      "id": "ec1071de-9bb7-4b46-92f7-a14ccb2d4a9f",
+      "name": "Clima Actual",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "ZrKGavNzaztZwePa",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a30a228c-1ee4-4f12-b9bf-6bea9d54a700",
+                    "leftValue": "={{ $('Telegram Message Trigger').item.json.message.voice }}",
+                    "rightValue": "Audio",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0642521a-8e0a-4feb-8122-17249c93ffaf",
+                    "leftValue": "={{ $('Telegram Message Trigger').item.json.message.text }}",
+                    "rightValue": "=",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c582bb33-71cb-454a-902f-8ae9f9c972b6",
+                    "leftValue": "={{ $json.message.photo  || $json.photo }}\n",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "8f13be84-5b92-458f-b886-fc22240970bb",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb912219-2436-4f04-8ffc-c1c20eb07344",
+              "name": "session_id",
+              "value": "={{ ($json.chat?.id ?? $json.message?.chat?.id ?? $json.from?.id ?? $json.message?.from?.id) + '' }} {{$json.message.document.file_id}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "bbf9e28f-4646-4580-88b3-b4b52c56bf73",
+      "name": "ID"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Message Trigger').item.json.message.photo[     $('Telegram Message Trigger').item.json.message.photo.length - 1 ].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        192
+      ],
+      "id": "b13ca54c-1f1f-4911-9524-0084514747e7",
+      "name": "Get a file Image",
+      "webhookId": "e0769871-efe3-49da-81a5-2f88a6fdd33f",
+      "credentials": {
+        "telegramApi": {
+          "id": "K3VzceAag2X7u8V4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Message Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -272
+      ],
+      "id": "66219c83-6371-4cc6-ad43-57cee44f52da",
+      "name": "Get a file Audio",
+      "webhookId": "e0769871-efe3-49da-81a5-2f88a6fdd33f",
+      "credentials": {
+        "telegramApi": {
+          "id": "K3VzceAag2X7u8V4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://analyzer:5000/analizar",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{ $('ID').item.json.session_id }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        192
+      ],
+      "id": "a3df8b8b-ece6-4d78-863b-9b844271b534",
+      "name": "Analizar IMG con OpenCV"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2784,
+        496
+      ],
+      "id": "c0f0d5ff-cb95-48ba-8cda-ad452e1cb5a6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Q8dlq24lIO7UJCXr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        560
+      ],
+      "id": "6f1c7ed6-8265-40f7-adf8-4a216c7c4dc3",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Q8dlq24lIO7UJCXr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        336
+      ],
+      "id": "cdb8944f-7a90-493d-9fa2-fc83ca3e7f73",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "KcWmkyYKX0w1EGE9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        560
+      ],
+      "id": "dda9e70a-6959-48f6-8833-5458f03fad71",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// CODE BUILD MESSAGE FOR AGENT\n// Construye el mensaje que va a leer el agente (\"Assistant Agent\")\n// antes de responderle al productor por Telegram.\n//\n// Entrada esperada en este nodo (desde el Code in JavaScript anterior):\n// {\n//   content: \"...resumen técnico corto...\",\n//   query_text: \"...texto para embeddings...\",\n//   metadata: {\n//      timestamp: \"...\",\n//      tipo_imagen: \"muestra_granos\",\n//      riesgo_sanitario: \"MEDIO\",\n//      riesgo_comercial: \"ACEPTABLE\",\n//      data_momento: { ... },\n//      metricas: { ... },\n//      diagnostico_global: \"...\",\n//      diagnostico_texto: \"...\",\n//      ...\n//   }\n// }\n// ============================================================\n\n// Soportamos dos formatos por las dudas:\n// - o viene directamente el objeto grande del analizador,\n// - o viene envuelto en {content, query_text, metadata}.\nconst wrapper = $json || {};\n\nconst meta = wrapper.metadata || wrapper || {};\nconst dm = meta.data_momento || wrapper.data_momento || {};\nconst metricas = meta.metricas || wrapper.metricas || {};\n\nconst tipo_imagen = meta.tipo_imagen || dm.tipo_imagen || \"desconocido\";\nconst timestamp = meta.timestamp || dm.timestamp_captura || new Date().toISOString();\n\n// Intentamos rescatar un \"resumen\" humano-legible.\n// Prioridad: diagnostico_global -> diagnostico_texto -> content.\nconst resumen_camara =\n  meta.diagnostico_global ||\n  meta.diagnostico_texto ||\n  wrapper.content ||\n  \"Sin resumen visual disponible.\";\n\n// ==============================\n// Normalización FAUNA / INSECTOS / HONGO\n// ==============================\n\nconst cont = dm.contaminacion || {};\n\nlet fauna_detectada = false;\nlet especie_animales = \"ninguna\";\n\n// En tu salida actual tenés `fauna_riesgo_roedor_ave`\n// 1 = hay riesgo por roedor/ave en contacto con el material.\nif (typeof cont.fauna_riesgo_roedor_ave === \"number\" && cont.fauna_riesgo_roedor_ave > 0) {\n  fauna_detectada = true;\n  especie_animales = \"roedor/ave en contacto con grano\";\n}\n\n// INSECTOS\nlet hay_insectos = false;\nlet especie_insectos = \"ninguno\";\n\n// plagas_insectos = 1 => detectaste plaga viva tipo gusano/larva.\nif (typeof cont.plagas_insectos === \"number\" && cont.plagas_insectos > 0) {\n  hay_insectos = true;\n}\n\n// si hay hallazgos_clave tipo \"plaga viva (gusano/larva/insecto) activa\"\nif (Array.isArray(dm.hallazgos_clave) && dm.hallazgos_clave.length > 0) {\n  const insectoHallazgo = dm.hallazgos_clave.find(h =>\n    h.toLowerCase().includes(\"plaga\") ||\n    h.toLowerCase().includes(\"gusano\") ||\n    h.toLowerCase().includes(\"larva\") ||\n    h.toLowerCase().includes(\"insecto\")\n  );\n  if (insectoHallazgo) {\n    hay_insectos = true;\n    especie_insectos = insectoHallazgo;\n  }\n}\n\n// HONGO / MOHO\nlet hay_hongos = false;\nlet tipo_hongos = \"ninguno\";\n\n// hongos_areas_sueltas = 1 => se detectó moho/hongo en zonas puntuales\nif (typeof cont.hongos_areas_sueltas === \"number\" && cont.hongos_areas_sueltas > 0) {\n  hay_hongos = true;\n  tipo_hongos = \"moho / hongo visible en el grano\";\n} else if (metricas.tiene_hongo_suelto === true) {\n  hay_hongos = true;\n  tipo_hongos = \"moho / hongo visible en el grano\";\n}\n\n// ==============================\n// Riesgos y acción sugerida\n// ==============================\n\n// En tu JSON viene:\n// dm.riesgo_sanitario = \"MEDIO\"\n// dm.riesgo_comercial = \"ACEPTABLE\"\n// No tenemos 'accion_inmediata_sugerida', así que seguimos la regla\n// original: si no vino, devolvemos texto fijo.\nconst riesgo_operacional = dm.riesgo_sanitario || meta.riesgo_sanitario || \"no evaluado\";\nconst condicion_comercial = dm.riesgo_comercial || meta.riesgo_comercial || \"no evaluada\";\n\nconst accion_sugerida = \"No se indicó acción inmediata.\";\n\n// ==============================\n// Armamos el snapshot data_momento_final\n// Esto es lo que LOGUEAMOS y también le pasamos al agente\n// (y el agente debe usar SOLO ESTO para contestar).\n// ==============================\nconst data_momento_final = {\n  tipo_imagen: tipo_imagen,\n  resumen_camara: resumen_camara,  // descripción humana de la escena / muestra\n  fauna_detectada,\n  especie_animales,\n  hay_insectos,\n  especie_insectos,\n  hay_hongos,\n  tipo_hongos,\n  riesgo_operacional,\n  condicion_comercial,\n  accion_sugerida,\n  timestamp_capture: timestamp,\n\n  // extras útiles para el LLM y para logs:\n  total_granos: dm.total_granos ?? metricas.total_granos ?? null,\n  porcentaje_grano_con_moho: dm.porcentaje_grano_con_moho ?? metricas.porcentaje_grano_con_moho ?? null,\n  hallazgos_clave: dm.hallazgos_clave || [],\n};\n\n// ==============================\n// Construimos el mensaje para el agente.\n// Este texto va al campo `text` del nodo \"Assistant Agent\".\n// El agente ya tiene un system prompt que:\n//\n/*\n - Responde SIEMPRE en español (es-AR).\n - Da 5 bloques: DIAGNÓSTICO / CONDICIÓN DEL LOTE / ACCIÓN INMEDIATA / NIVEL DE URGENCIA / DETALLE NUMÉRICO.\n - Usa data_momento y opcionalmente la herramienta vectorial \"Responder de DB vectorial\".\n*/\n// ==============================\n\nlet mensaje = `\nESTADO DETECTADO (USÁ SOLO ESTO, NO INVENTES NADA):\n${JSON.stringify(data_momento_final, null, 2)}\n\nTU TAREA:\nVas a explicarle al productor lo que está pasando EN ESTA FOTO ESPECÍFICA que él mandó recién. Esto es un audio técnico corto, no un informe académico.\n\nREGLAS DURAS:\n- Siempre hablá en primera persona directa sobre ESTA muestra (\"en la foto que mandaste se ve...\", \"ahora mismo en este maíz...\").\n- Describí exactamente qué se ve en la imagen (resumen_camara) con tus propias palabras, pero SIN agregar cosas nuevas que no estén en data_momento_final.\n- Tenés que mencionar sí o sí:\n  • el material observado (ej. maíz, grano, rastrojo, piso de silo, etc.),\n  • la plaga o larva si hay_insectos = true,\n  • si hay o no hay moho/hongo visible (hay_hongos),\n  • si hubo contacto de aves/roedores FAUNA (fauna_detectada),\n  • el nivel de riesgo_operacional usando lenguaje humano.\n- Tenés que cerrar diciendo qué hacer YA con ese material, usando accion_sugerida si viene con algo útil.\n- Si accion_sugerida está vacía o muy genérica, usá EXACTAMENTE esta recomendación estándar:\n  \"Separá este material dañado y no lo mezcles con grano sano hasta revisarlo con un técnico en el momento.\"\n\nCÓMO HABLAR DE RIESGO:\n- Si riesgo_operacional es \"CRÍTICO\" o \"ALTO\", decí: \"Esto es urgente, riesgo alto ahora mismo\".\n- Si riesgo_operacional es \"MEDIO\", decí: \"Hay un riesgo moderado, hay que controlarlo\".\n- Si viene \"no evaluado\", decí: \"No quedó evaluado el nivel de riesgo, pero hay impacto en calidad\".\nNo inventes porcentajes ni niveles que no estén.\n\nCÓMO HABLAR DE MOHO / HONGO:\n- Si hay_hongos = true: decí claramente que se ve moho/hongo sobre el grano.\n- Si hay_hongos = false: decí que en esta toma no se ve moho activo.\nNo uses palabras como micotoxina, toxina, contaminación química, etc. si NO aparece en data_momento_final.\n\nCÓMO HABLAR DE ANIMALES GRANDES:\n- Si fauna_detectada = true: \"Se ve contacto de ave/roedor con el material, eso contamina directo.\"\n- Si fauna_detectada = false: NO lo nombres (omitilo).\n\nCÓMO HABLAR DE INSECTOS:\n- Si hay_insectos = true: nombrar que hay presencia de plaga viva / larva activa sobre el grano y que está dañando el maíz ahora mismo. Si especie_insectos tiene texto, usalo.\n- Si hay_insectos = false: NO inventes insectos.\n\nLONGITUD:\n- Tu respuesta final tiene que tener entre 5 y 8 oraciones cortas tipo audio de WhatsApp.\n- Nada de bullets, nada de títulos en mayúsculas. Texto corrido, directo.\n\nIMPORTANTE:\n- No menciones bounding boxes, IA, modelo, análisis automático ni \"confidence\".\n- No digas \"no se indicó acción inmediata\". Si no hay acción clara en accion_sugerida, usá la recomendación estándar indicada arriba.\n- No repitas dos veces la misma idea.\n\nENTREGA:\nDevolveme SOLO el mensaje final al productor, en texto plano.\n`;\n\n// ==============================\n// Devolvemos lo que necesita el siguiente nodo (\"Assistant Agent\")\n// y también para log.\n// ==============================\nreturn {\n  json: {\n    message: mensaje,\n    data_momento: data_momento_final,\n    tipo_analisis: tipo_imagen,\n    timestamp: timestamp,\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        112
+      ],
+      "id": "ba2fd863-2634-49c0-9652-473a4c6cfe84",
+      "name": "Code Build Message for Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// CODE IN JAVASCRIPT\n// Normaliza la respuesta del analizador de imagen (Flask/OpenCV+Gemini)\n// y prepara info para:\n//   1. guardar en Supabase Vector Store (embeddings),\n//   2. pasar al siguiente nodo que arma el mensaje para el agente.\n//\n// Espera que $json tenga forma (un item por imagen):\n// {\n//   data_momento: {...},\n//   diagnostico_global: \"...\",\n//   diagnostico_texto: \"...\",\n//   imagen_debug: \"output/...jpg\",\n//   metricas: {...},\n//   objetos_detectados: [...],\n//   ok: true,\n//   timestamp: \"2025-10-27T14:58:32.719295\",\n//   tipo_imagen: \"muestra_granos\"\n// }\n// ============================================================\n\nconst raw = $json || {};\n\n// --- Desempaquetamos campos importantes ---\nconst dm = raw.data_momento || {};\nconst metricas = raw.metricas || {};\nconst tipo_imagen = raw.tipo_imagen || dm.tipo_imagen || \"desconocido\";\nconst timestamp = raw.timestamp || dm.timestamp_captura || new Date().toISOString();\n\nconst riesgo_sanitario =\n  dm.riesgo_sanitario ||\n  metricas.riesgo_sanitario ||\n  \"NO_INDICADO\";\n\nconst riesgo_comercial =\n  dm.riesgo_comercial ||\n  metricas.riesgo_comercial ||\n  \"NO_INDICADO\";\n\nconst hallazgos = Array.isArray(dm.hallazgos_clave)\n  ? dm.hallazgos_clave.join(\", \")\n  : \"\";\n\nconst total_granos = dm.total_granos ?? metricas.total_granos;\nconst moho_pct = dm.porcentaje_grano_con_moho ?? metricas.porcentaje_grano_con_moho;\n\n// ---------------------------\n// 1) content\n// Texto técnico breve que describe ESTE caso puntual.\n// Ideal para vista rápida / historial.\n// ---------------------------\nlet contentParts = [];\n\ncontentParts.push(\n  `Tipo de imagen: ${tipo_imagen}.`\n);\n\ncontentParts.push(\n  `Riesgo sanitario: ${riesgo_sanitario}. Riesgo comercial: ${riesgo_comercial}.`\n);\n\nif (hallazgos) {\n  contentParts.push(\n    `Hallazgos clave: ${hallazgos}.`\n  );\n}\n\nif (total_granos !== undefined) {\n  contentParts.push(\n    `Total granos detectados: ${total_granos}.`\n  );\n}\n\nif (moho_pct !== undefined) {\n  contentParts.push(\n    `Grano con moho visible: ${moho_pct}%.`\n  );\n}\n\n// Agrego el diagnóstico global del analizador (texto crudo que vino del backend)\nif (raw.diagnostico_global) {\n  contentParts.push(\n    `Resumen técnico: ${raw.diagnostico_global}`\n  );\n}\n\nconst content = contentParts.join(\" \").trim();\n\n\n// ---------------------------\n// 2) query_text\n// Texto que va al embedding (vector). Esto es lo que\n// vamos a usar después para buscar casos parecidos.\n// Debe contener:\n// - tipo de problema,\n// - tipo de riesgo,\n// - plaga / hongo / contaminación,\n// - en qué contexto (grano / lote / silo).\n// ---------------------------\nlet queryParts = [];\n\nqueryParts.push(`tipo_imagen=${tipo_imagen}`);\nqueryParts.push(`riesgo_sanitario=${riesgo_sanitario}`);\nqueryParts.push(`riesgo_comercial=${riesgo_comercial}`);\n\nif (dm.contaminacion) {\n  // ejemplo:\n  // contaminacion: {\n  //   fauna_riesgo_roedor_ave: 0,\n  //   hongos_areas_sueltas: 1,\n  //   maleza: 0,\n  //   plagas_insectos: 1\n  // }\n  const c = dm.contaminacion;\n  queryParts.push(\n    `contaminacion: fauna=${c.fauna_riesgo_roedor_ave}, hongos_sueltos=${c.hongos_areas_sueltas}, plaga_insectos=${c.plagas_insectos}, maleza=${c.maleza}`\n  );\n}\n\n// hallazgos tipo \"plaga viva (gusano/larva/insecto) activa\"\nif (hallazgos) {\n  queryParts.push(`hallazgos=${hallazgos}`);\n}\n\n// agrego una versión compacta del diagnóstico global, para semántica\nif (raw.diagnostico_global) {\n  queryParts.push(`diagnostico_global=${raw.diagnostico_global}`);\n}\n\nconst query_text = queryParts.join(\" | \");\n\n\n// ---------------------------\n// 3) metadata\n// Este objeto se guarda entero junto al documento embeddeado.\n// Acá va TODO lo que queremos recuperar luego en el RAG.\n// ---------------------------\nconst metadata = {\n  timestamp,\n  tipo_imagen,\n  riesgo_sanitario,\n  riesgo_comercial,\n\n  data_momento: dm,\n  metricas: metricas,\n\n  diagnostico_global: raw.diagnostico_global || \"\",\n  diagnostico_texto: raw.diagnostico_texto || \"\",\n\n  imagen_debug: raw.imagen_debug || \"\",\n  objetos_detectados: raw.objetos_detectados || [],\n\n  ok: raw.ok === true,\n};\n\n// ---------------------------\n// RETURN\n// El vectorStore Supabase1 espera { content, query_text, metadata }.\n// Y el próximo nodo (Build Message for Agent) también va a leer esto.\n// ---------------------------\nreturn {\n  json: {\n    content,\n    query_text,\n    metadata,\n  },\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        192
+      ],
+      "id": "15128da2-654d-44a3-93c9-710c76df1177",
+      "name": "Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check if Audio file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio": {
+      "main": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set field": {
+      "main": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistant Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply in Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Message Trigger": {
+      "main": [
+        [
+          {
+            "node": "ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Responder de DB vectorial",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder de DB vectorial": {
+      "ai_tool": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pronostico 5 días": {
+      "ai_tool": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clima Actual": {
+      "ai_tool": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a file Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set field",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file Image": {
+      "main": [
+        [
+          {
+            "node": "Analizar IMG con OpenCV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar IMG con OpenCV": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Responder de DB vectorial",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "main": [
+        []
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Build Message for Agent": {
+      "main": [
+        [
+          {
+            "node": "Assistant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code Build Message for Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8ad08699-a02c-4bfb-ab2e-89b3d87db712",
+  "meta": {
+    "templateId": "voice_assistant_agent_with_telegram",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "265fdc3a46c182971041d8d037328bfafb699d6afa36583c57c327e1de5eda9d"
+  },
+  "id": "Vc5tLOpjJoRewtlM",
+  "tags": []
+}

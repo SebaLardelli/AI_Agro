@@ -1,0 +1,248 @@
+{
+  "name": "RAG in n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "4a62c6ef-a6db-4e94-bac7-422d6427abf5",
+      "name": "Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "position": [
+        144,
+        -304
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "supabaseApi": {
+          "id": "KcWmkyYKX0w1EGE9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "weekday": "0"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1UrhzSn6Rq4Yc4OKzsNUEjTi1ve_27tCn",
+          "mode": "list",
+          "cachedResultName": "Documentos",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1UrhzSn6Rq4Yc4OKzsNUEjTi1ve_27tCn"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "a0e5b819-a50a-4711-84b2-c3a2c8c85b31",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        -592,
+        -208
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YHGDn5AClxlbGnc0",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c33387a9-a6ed-485a-8ed9-c3fdb646de3a",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08e711eb-1d5b-4520-977b-039ab37cf1c6",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -384,
+        -208
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "21a876c0-2d9b-4fd4-b2a4-f6a46a551d52",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        0,
+        -48
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "Q8dlq24lIO7UJCXr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "8300df00-3694-43c6-954d-d6a4f7e398ab",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        208,
+        -48
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "separator": ".",
+        "chunkSize": 2000,
+        "chunkOverlap": 300
+      },
+      "id": "4de9e118-b426-479d-9f39-c55e6df1f681",
+      "name": "Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+      "position": [
+        352,
+        160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1bQvZ4gpQ2X-xmGXMgE4j1UowaHkInPSR",
+          "mode": "list",
+          "cachedResultName": "Manejo de enfermedades, Invierno y Pastura.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1bQvZ4gpQ2X-xmGXMgE4j1UowaHkInPSR/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "046b7778-cd3d-4604-8169-e4bbc411fcd0",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -176,
+        -208
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YHGDn5AClxlbGnc0",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cb487107-d85c-4f10-9d4d-2ceb0cc68fc1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "265fdc3a46c182971041d8d037328bfafb699d6afa36583c57c327e1de5eda9d"
+  },
+  "id": "pVP3vlRoapXbeN03",
+  "tags": []
+}
